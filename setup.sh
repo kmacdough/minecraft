@@ -1,14 +1,18 @@
 #!/bin/bash
 # Setup for basic MC 1.18 paper server; should be rerunable w/o error
+
 # Install Dependencies
 sudo apt-get install screen
-jdk_file="jdk-17_linux-x64_bin.deb"
-jdk_url="https://download.oracle.com/java/17/latest/$jdk_file"
-curl $jdk_url > $jdk_file && sudo apt install -y ./$jdk_file && rm $jdk_file
-mkdir -p minecraft && cd minecraft
-paper_url="https://papermc.io/api/v2/projects/paper/versions/1.18/builds/66/downloads/paper-1.18-66.jar"
-curl $paper_url > paper.jar
-echo "eula=true" > eula.txt
-base_dir=$(pwd)
-start_cmd="/usr/lib/jvm/jdk-17/bin/java -Xmx2048M -Xms2048M -jar $base_dir/paper.jar"
-echo "cd $base_dir && screen -dmS minecraft $start_cmd" > start.sh && chmod u+x start.sh
+jdk_url="https://download.oracle.com/java/17/latest/jdk-17_linux-x64_bin.deb"
+jdk_file=$(basename $jdk_url)
+jdk_pkg=$(echo "$jdk_file" | sed -E "s/^([^_]*)_.*$/\1/") # e.g. jdk-17 from jdk-17_linux-x64_bin.deb
+curl -O $jdk_url && sudo apt install -y ./$jdk_file && rm $jdk_file
+ln -s "/usr/lib/jvm/$jdk_pkg/bin/java" /usr/bin/java
+
+# Setup systemd service
+cp minecraft@.service /etc/systemd/system/
+
+# Add user
+if ! id minecraft &>/dev/null; then
+    useradd -rmd /opt/minecraft minecraft
+fi
