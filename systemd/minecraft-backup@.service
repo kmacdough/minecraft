@@ -1,0 +1,10 @@
+[Unit]
+Description=Backup Service for Minecraft Server: %1
+
+[Service]
+WorkingDirectory=/opt/minecraft/instances/%1
+
+Type=oneshot
+ExecStartPre=/usr/bin/screen -r mc-%1 -X stuff '/save-all\n/save-off\n'
+ExecStart=gsutil -m  cp -R world gs://minecraft-minecraftbackup/$(date "+%Y%m%d-%H%M%S")-world
+ExecStopPost=/usr/bin/screen -r mc-%1 -X stuff '/save-on\n'
